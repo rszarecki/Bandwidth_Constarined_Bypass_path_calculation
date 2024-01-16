@@ -26,7 +26,7 @@
 <rfc
   xmlns:xi="http://www.w3.org/2001/XInclude"
   category="info"
-  docName="draft-szarecki-mpls-Bandwidth-constrained-bypass-path"
+  docName="draft-szarecki-teas-bandwidth-constrained-bypass-path"
   ipr="trust200902"
   obsoletes=""
   updates=""
@@ -43,17 +43,12 @@
 -->
 
   <front>
-    <title abbrev="andwidth-constrained-only FRR">MPLS FRR bypass path calculation with automatically derived bandwdth constrain and its signalling with different bandwidth to be reserved</title>
+    <title abbrev="bandwidth-constrained-only FRR">MPLS FRR bypass path calculation with automatically derived bandwdth constrain and its signalling with different bandwidth to be reserved</title>
     <!--  [REPLACE/DELETE] abbrev. The abbreviated title is required if the full title is longer than 39 characters -->
 
-    <seriesInfo name="Internet-Draft" value="draft-szarecki-mpls-Bandwidth-constrained-bypass-path"/>
+    <seriesInfo name="Internet-Draft" value="draft-szarecki-teas-bandwidth-constrained-bypass-path"/>
    
-    <author fullname="Rafal Jan Szarecki" initials="R.J" role="editor" surname="Szarecki">
-
-      <!-- [CHECK]
-             * initials should not include an initial for the surname
-             * role="editor" is optional -->
-    <!-- Can have more than one author -->
+    <author fullname="Rafal Jan Szarecki" initials="R.J." surname="Szarecki">
       
     <!-- all of the following elements are optional -->
       <organization>Google LLC</organization>
@@ -68,12 +63,10 @@
           <!-- Uses two letter country code -->
         </postal>        
         <phone></phone>
-        <email>rszarecki@gmail.com</email>  
-        <!-- Can have more than one <email> element -->
-        <uri>URI [REPLACE/DELETE]</uri>
+        <email>rszarecki@gmail.com</email>
       </address>
     </author>
-    <author fullname="Jonathan R Mitchell" initials="J.R" surname="Mitchell">
+    <author fullname="Jon Mitchell" initials="J." surname="Mitchell">
       <organization>Google LLC</organization>
       <address>
         <postal>
@@ -86,13 +79,11 @@
           <!-- Uses two letter country code -->
         </postal>        
         <phone></phone>
-        <email>jrmitche@puck.nether.net</email>  
-        <!-- Can have more than one <email> element -->
-        <uri>URI [REPLACE/DELETE]</uri>
+        <email>jrmitche@puck.nether.net</email>
       </address>
     </author>
 
-    <date year="2023"/>
+    <date year="2024"/>
     <!-- On draft subbmission:
          * If only the current year is specified, the current day and month will be used.
          * If the month and year are both specified and are the current ones, the current day will
@@ -101,11 +92,12 @@
     -->
 
     <area>Routing</area>
-    <workgroup>Multiprotocol Label Switching</workgroup>
+    <workgroup>Traffic Engineering Architecture and Signaling</workgroup>
     <!-- "Internet Engineering Task Force" is fine for individual submissions.  If this element is 
           not present, the default is "Network Working Group", which is used by the RFC Editor as 
           a nod to the history of the RFC Series. -->
 
+    <keyword>MPLS</keyword>
     <keyword>FRR</keyword>
     <keyword>bypass</keyword>
     <keyword>facility backup</keyword>
@@ -130,7 +122,7 @@
     
     <section>
      <name>Introduction</name>
-      <t>THe network operators use MPLS-TE technology to optimize network resources (bandwidth over network graph) while providing prioritized treatment - high bandwidth and low loss. This is often done by combination of bandwidth reservation for LSPs and protection (of some more critical) of them by facility backup <xref target="RFC4090"/> technique.
+      <t>Network operators use MPLS-TE technology to optimize network resources (bandwidth over network graph) while providing prioritized treatment - high bandwidth and low loss. This is often done by combination of bandwidth reservation for LSPs and protection (of some more critical) of them by facility backup <xref target="RFC4090"/> technique.
       The facility backup uses a bypass tunnel (instantiated as MPLS LSP) to temporally carry impacted LSP around a faulted resource (link, node), immediately after failure. The bypass tunnel's path is computed and established before failure as result of what-if-like analysis, for every possible failure. Hence there are much more established bypasses in the network, or even originating on particular node  (PLR), then foreseen to be used at any given point of time.
       Typically, a bypass tunnel is established without any bandwidth reservation, and routed on the shortest path between PLR and Merging Point (MP) after pruning topology out of protected resource (link, interface) and others that share the same SRLGs. This is understandable, because making bandwidth reservation for bypass tunnels would result in "consumption" of network capacity for all bypasses while only very few of it is used at the same time, and for a very short period  - just a few minutes after failure. Furthemore, in order to make reservation for bypasses possible, network links need to be built with sufficient capacity, which make this option economically unfeasible.
       This practice however has limitations - bypass tunnel could be routed over interfaces that available bandwidth lower than protected traffic volume. This limitation is specifically common in networks that are built with reduced latency and capacity cost as critical design goals. Such a network has a very large spread between highest and lowest capacity of adjacencies and metrics bound to latency/distance rather than capacity.</t>
@@ -225,8 +217,6 @@
       <references>
         <name>Normative References</name>
         
-        <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.2119.xml"/>
-        <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.8174.xml"/>
         <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.4090.xml"/>
         <!-- The recommended and simplest way to include a well known reference -->
         
@@ -235,33 +225,26 @@
       <references>
         <name>Informative References</name>
        
-        <reference anchor="exampleRefMin">
-        <!-- [REPLACE/DELETE] Example minimum reference -->
-          <front>
-            <title>Title [REPLACE]</title>
-            <author initials="Initials [REPLACE]" surname="Surname [REPLACE]">
-              <organization/>
-            </author>
-            <date year="2006"/>
-            <!-- [CHECK] -->
-          </front>
-        </reference> 
+        <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.2119.xml"/>
+        <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.8174.xml"/>
+        <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.2702.xml"/>  
+        <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.3209.xml"/>
+        <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.3630.xml"/>  
+        <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.5305.xml"/>
+        <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.8733.xml"/>           
        
       </references>
     </references>
 
     <section anchor="Acknowledgements" numbered="false">
-      <!-- [REPLACE/DELETE] an Acknowledgements section is optional -->
       <name>Acknowledgements</name>
-      <t>This template uses extracts from templates written by Pekka Savola, Elwyn Davies and 
-        Henrik Levkowetz. [REPLACE]</t>
+      <t>TBD</t>
     </section>
     
     <section anchor="Contributors" numbered="false">
       <!-- [REPLACE/DELETE] a Contributors section is optional -->
       <name>Contributors</name>
-      <t>Thanks to all of the contributors.</t>
-      <!-- [CHECK] it is optional to add a <contact> record for some or all contributors -->
+      <t>TBD</t>
     </section>
     
  </back>
