@@ -26,7 +26,7 @@
 <rfc
   xmlns:xi="http://www.w3.org/2001/XInclude"
   category="info"
-  docName="draft-szarecki-teas-bandwidth-aware-bypass-no-reservation"
+  docName="draft-szarecki-teas-bw-aware-bypass-no-reservation"
   ipr="trust200902"
   obsoletes=""
   updates=""
@@ -46,7 +46,7 @@
     <title abbrev="bw-aware-bypass-no-reservation">MPLS FRR bypass path calculation with bandwidth awareness without reservation</title>
     <!--  [REPLACE/DELETE] abbrev. The abbreviated title is required if the full title is longer than 39 characters -->
 
-    <seriesInfo name="Internet-Draft" value="draft-szarecki-teas-bandwidth-aware-bypass-no-reservation"/>
+    <seriesInfo name="Internet-Draft" value="draft-szarecki-teas-bw-aware-bypass-no-reservation"/>
    
     <author fullname="Rafal Jan Szarecki" initials="R.J." surname="Szarecki">
       
@@ -108,7 +108,7 @@
          use by search engines. -->
 
     <abstract>
-      <t><xref target="RFC4090"/> documents facility backup FRR in MPLS-TE networks.  This document describes methods that allow the Point of Local Repair (PLR) to find a path with sufficient available bandwidth to accommodate protected traffic, while not making undesired reservations that would require additional capacity. Below aspects are covered:</t>
+      <t>RFC4090 documents facility backup FRR in MPLS-TE networks.  This document describes methods that allow the Point of Local Repair (PLR) to find a path with sufficient available bandwidth to accommodate protected traffic, while not making undesired reservations that would require additional capacity. Below aspects are covered:</t>
       <ul spacing="normal">
         <li>Automatic determination of bypass required bandwidth by the PLR</li>
         <li>Calculation of path based on this information using constrained shortest path algorithm (CSPF)</li>
@@ -211,9 +211,6 @@
        
         <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.2119.xml"/>
         <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.8174.xml"/>
-        <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.2702.xml"/>  
-        <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.3630.xml"/>  
-        <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.5305.xml"/>
         <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.8733.xml"/>           
        
       </references>
