@@ -43,7 +43,7 @@
 -->
 
   <front>
-    <title abbrev="bandwidth-constrained-bypass-no-reservation">MPLS FRR bypass path calculation with automatically derived bandwdth constraint without reservation</title>
+    <title abbrev="bw-aware-bypass-no-reservation">MPLS FRR bypass path calculation with bandwidth awareness without reservation</title>
     <!--  [REPLACE/DELETE] abbrev. The abbreviated title is required if the full title is longer than 39 characters -->
 
     <seriesInfo name="Internet-Draft" value="draft-szarecki-teas-bandwidth-constrained-no-reservation-bypass"/>
@@ -122,7 +122,7 @@
     
     <section>
      <name>Introduction</name>
-      <t>Network operators use MPLS-TE technology, as described in <xref="RFC3209"/>, to optimize network resources (bandwidth over network graph) while providing prioritized treatment - high bandwidth and low loss. This is often done by combination of bandwidth reservation for LSPs and protection (of some more critical) of them by facility backup <xref="RFC4090"/> technique. The facility backup technique uses a pre-signaled bypass tunnel (instantiated as MPLS LSP) to temporally carry impacted LSP around a faulty resource, such as a link or node, immediately after failure. In many networks, operators have not configured the LSPs to have bandwidth protection desired, and therefore the bypass tunnels are provisioned without any bandwidth reservation constraint, to prevent the booking of bandwidth for these tunnels which only carry traffic briefly during failure events until global convergence.  Without a bandwidth reservation constraint, they are typically routed on the shortest path between the Point of Local Repair (PLR) and Merge Point (MP) based on a CSPF satisfying any other constraints such as shared risk link groups (SRLG). This practice has the limitation that the bypass tunnel could be routed over interfaces that have available bandwidth much lower than protected resource's reservations. This limitation is specifically common in networks that utilize IGP metric values based on distance or latency rather than bandwidth.  These networks may have a large difference between the highest and lowest capacity of adjacencies between various locations.</t>
+      <t>Network operators use MPLS-TE technology, as described in <xref target="RFC3209"/>, to optimize network resources (bandwidth over network graph) while providing prioritized treatment - high bandwidth and low loss. This is often done by combination of bandwidth reservation for LSPs and protection (of some more critical) of them by facility backup <xref target="RFC4090"/> technique. The facility backup technique uses a pre-signaled bypass tunnel (instantiated as MPLS LSP) to temporally carry impacted LSP around a faulty resource, such as a link or node, immediately after failure. In many networks, operators have not configured the LSPs to have bandwidth protection desired, and therefore the bypass tunnels are provisioned without any bandwidth reservation constraint, to prevent the booking of bandwidth for these tunnels which only carry traffic briefly during failure events until global convergence.  Without a bandwidth reservation constraint, they are typically routed on the shortest path between the Point of Local Repair (PLR) and Merge Point (MP) based on a CSPF satisfying any other constraints such as shared risk link groups (SRLG). This practice has the limitation that the bypass tunnel could be routed over interfaces that have available bandwidth much lower than protected resource's reservations. This limitation is specifically common in networks that utilize IGP metric values based on distance or latency rather than bandwidth.  These networks may have a large difference between the highest and lowest capacity of adjacencies between various locations.</t>
 
       <t>This document provides procedures that the headend routing node of the bypass tunnel (PLR) can utilize to optimize bypass tunnel path computation, so it is routed over links in a network that are more likely to have sufficient available bandwidth, while still not utilizing bandwidth reservations. Procedures described are local to PLR, hence do not impose any special requirements on other nodes in the network, and could be deployed incrementally.  These procedures could be deployed whether bypass tunneml’s Merge Point (MP) is explicitly provisioned via local configuration or when the PLR automatically determines the necessary MP form Traffic Engineering Database (TED) and inspection of RRO of protected LSPs.</t>
       
@@ -161,7 +161,7 @@
     </section>
     <section anchor="bypass-path-computation">
       <name>Bypass path computation</name>
-      <t>The network path for the bypass tunnel is computed using the same logic as described in <xref target="RFC4090" sectionFormat="of" section="6.2" />. There are four classes of events that trigger the computation of a bypass path:</t>
+      <t>The network path for the bypass tunnel is computed using the same logic as described in <xref target="RFC4090" sectionFormat="of" section="6.2"/>. There are four classes of events that trigger the computation of a bypass path:</t>
       <ol>
         <li>Expiration of existing bypass lsp reoptimization timer</li>
         <li>Receipt of PathErr due to network failure along existing bypass path or failure of existing bypass egress interface on PLR</li>
@@ -169,14 +169,14 @@
         <li>Change of reserved bandwidth of protected LSP or signaling of a new LSP that is to be protected by an existing bypass tunnel</li>
       </ol>
       <t>The last event can occur quite frequently, especially in networks that utilize automatic bandwidth determination for protected LSPs with aggressive intervals.  As such, these events SHOULD NOT trigger bypass path re-computation. This is because including these events would lead to never converging network and adversely impact computational resources - control plane CPU of network device.</t>
-      <t>For the events of the first three classes, the PBW value determined as per <xref target="PBW_determination" /> should be used to derive path computation bandwidth constraints utilized by CSPF.  This value together with other constraining attributes configured, e.g. SRLG). The result of this process is an ordered list of network interfaces in the form of Explicit Route Object (ERO) for bypass tunnel, that is used for signaling of LSP instantiating bypass tunnel.</t>
+      <t>For the events of the first three classes, the PBW value determined as per <xref target="PBW_determination"/> should be used to derive path computation bandwidth constraints utilized by CSPF.  This value together with other constraining attributes configured, e.g. SRLG). The result of this process is an ordered list of network interfaces in the form of Explicit Route Object (ERO) for bypass tunnel, that is used for signaling of LSP instantiating bypass tunnel.</t>
     </section>
     <section anchor="bypass-tunnel-signaling">
       <name>Bypass tunnel signaling</name>
       <t>Bypass tunnels are instantiated as an LSP that have head-end on PLR and tail-end on MP. They are signaled by RSVP just like any other MPLS LSP. Specifically PLR uses and inserts ERO objects into PATH messages to enforce network path given bypass traverses. The other important RSVP PATH's object is Traffic-Specification (T-SPEC), which encodes bandwidth that needs to be reserved for signaled LSP.</t>
-      <t>Under this procedure, T-SPEC bandwidth is independent of the bandwidth utilized by the CSPF algorithm as described in <xref target="PBW_determination" />.  Since the purpose of the procedures in this document are to provide a less likely to be congested path for the backup tunnel, the LSP bandwidth for the bypass tunnels should be configured to a value less than the minimum value utilized by Section 2 procedures, otherwise reservations for the value computed from the Section 3 CSPF procedure are more likely to fail due to lack of available bandwidth on the computed path.  Implementation SHOULD support static configuration of signaled bandwidth independent from the PBW.</t>
-      <t>PLR MUST insert The ERO object in RSVP PATH. Its value MUST be the ERO computed as per <xref target="bypass-path-computation" />.</t>
-      <t>Note: If ERO returned by path computation described in <xref target="bypass-path-computation" /> is equal to network path bypass tunnel currently traverses, and the signaled bandwidth did not changed (e.g. because it has a statically configured value), there is no need for signaling a new LSP - existing one can be refreshed and utilized.</t>
+      <t>Under this procedure, T-SPEC bandwidth is independent of the bandwidth utilized by the CSPF algorithm as described in <xref target="PBW_determination"/>.  Since the purpose of the procedures in this document are to provide a less likely to be congested path for the backup tunnel, the LSP bandwidth for the bypass tunnels should be configured to a value less than the minimum value utilized by Section 2 procedures, otherwise reservations for the value computed from the Section 3 CSPF procedure are more likely to fail due to lack of available bandwidth on the computed path.  Implementation SHOULD support static configuration of signaled bandwidth independent from the PBW.</t>
+      <t>PLR MUST insert The ERO object in RSVP PATH. Its value MUST be the ERO computed as per <xref target="bypass-path-computation"/>.</t>
+      <t>Note: If ERO returned by path computation described in <xref target="bypass-path-computation"/> is equal to network path bypass tunnel currently traverses, and the signaled bandwidth did not changed (e.g. because it has a statically configured value), there is no need for signaling a new LSP - existing one can be refreshed and utilized.</t>
     </section>
 
     <section anchor="IANA">
@@ -188,7 +188,7 @@
     <section anchor="Security">
       <!-- All drafts are required to have a security considerations section. See RFC 3552 for a guide. -->
       <name>Security Considerations</name>
-      <t> This document does not introduce new security issues.  The security considerations listed in <xref target="RFC4090" sectionFormat="of" section="9" />still remain relevant.
+      <t> This document does not introduce new security issues.  The security considerations listed in <xref target="RFC4090" sectionFormat="of" section="9"/>still remain relevant.
 </t>
     </section>
     
