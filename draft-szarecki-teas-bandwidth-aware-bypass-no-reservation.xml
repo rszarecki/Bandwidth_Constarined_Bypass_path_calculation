@@ -26,7 +26,7 @@
 <rfc
   xmlns:xi="http://www.w3.org/2001/XInclude"
   category="info"
-  docName="draft-szarecki-teas-bandwidth-constrained-bypass-no-reservation"
+  docName="draft-szarecki-teas-bandwidth-aware-bypass-no-reservation"
   ipr="trust200902"
   obsoletes=""
   updates=""
@@ -46,7 +46,7 @@
     <title abbrev="bw-aware-bypass-no-reservation">MPLS FRR bypass path calculation with bandwidth awareness without reservation</title>
     <!--  [REPLACE/DELETE] abbrev. The abbreviated title is required if the full title is longer than 39 characters -->
 
-    <seriesInfo name="Internet-Draft" value="draft-szarecki-teas-bandwidth-constrained-no-reservation-bypass"/>
+    <seriesInfo name="Internet-Draft" value="draft-szarecki-teas-bandwidth-aware-bypass-no-reservation"/>
    
     <author fullname="Rafal Jan Szarecki" initials="R.J." surname="Szarecki">
       
