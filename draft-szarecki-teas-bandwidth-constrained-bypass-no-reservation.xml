@@ -169,7 +169,7 @@
         <li>Change of reserved bandwidth of protected LSP or signaling of a new LSP that is to be protected by an existing bypass tunnel</li>
       </ol>
       <t>The last event can occur quite frequently, especially in networks that utilize automatic bandwidth determination for protected LSPs with aggressive intervals.  As such, these events SHOULD NOT trigger bypass path re-computation. This is because including these events would lead to never converging network and adversely impact computational resources - control plane CPU of network device.</t>
-      <t>For the events of the first three classes, the PBW value determined as per <xref target="PBW_determination"/> should be used to derive path computation bandwidth constraints utilized by CSPF.  This value together with other constraining attributes configured, (e.g. SRLG) are used as archuments for path computetion by CSPF procedure. The result of this process is an ordered list of network interfaces in the form of Explicit Route Object (ERO) for bypass tunnel, that is used for signaling of LSP instantiating bypass tunnel.</t>
+      <t>For the events of the first three classes, the PBW value determined as per <xref target="PBW_determination"/> should be used to derive path computation bandwidth constraints utilized by CSPF.  This value together with other constraining attributes configured, (e.g. SRLG) are used as arguments for path computetion by CSPF procedure. The result of this process is an ordered list of network interfaces in the form of Explicit Route Object (ERO) for bypass tunnel, that is used for signaling of LSP instantiating bypass tunnel.</t>
     </section>
     <section anchor="bypass-tunnel-signaling">
       <name>Bypass tunnel signaling</name>
