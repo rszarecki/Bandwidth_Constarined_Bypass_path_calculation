@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+     draft-rfcxml-general-template-standard-00
+  
+     This template includes examples of the most commonly used features of RFCXML with comments 
+     explaining how to customise them. This template can be quickly turned into an I-D by editing 
+     the examples provided. Look for [REPLACE], [REPLACE/DELETE], [CHECK] and edit accordingly.
+     Note - 'DELETE' means delete the element or attribute, not just the contents.
+     
+     Documentation is at https://authors.ietf.org/en/templates-and-schemas
+-->
+<?xml-model href="rfc7991bis.rnc"?>  <!-- Required for schema validation and schema-aware editing -->
+<!-- <?xml-stylesheet type="text/xsl" href="rfc2629.xslt" ?> -->
+<!-- This third-party XSLT can be enabled for direct transformations in XML processors, including most browsers -->
+
+
+<!DOCTYPE rfc [
+  <!ENTITY nbsp    "&#160;">
+  <!ENTITY zwsp   "&#8203;">
+  <!ENTITY nbhy   "&#8209;">
+  <!ENTITY wj     "&#8288;">
+]>
+<!-- If further character entities are required then they should be added to the DOCTYPE above.
+     Use of an external entity file is not recommended. -->
+
+<rfc
+  xmlns:xi="http://www.w3.org/2001/XInclude"
+  category="info"
+  docName="draft-szarecki-teas-bw-aware-bypass-no-reservation-00"
+  ipr="trust200902"
+  obsoletes=""
+  updates=""
+  submissionType="IETF"
+  xml:lang="en"
+  version="3">
+<!-- [REPLACE] 
+       * docName with name of your draft
+     [CHECK] 
+       * category should be one of std, bcp, info, exp, historic
+       * ipr should be one of trust200902, noModificationTrust200902, noDerivativesTrust200902, pre5378Trust200902
+       * updates can be an RFC number as NNNN
+       * obsoletes can be an RFC number as NNNN 
+-->
+
+  <front>
+    <title abbrev="bw-aware-bypass-no-reservation">MPLS FRR bypass path calculation with bandwidth awareness without reservation</title>
+    <!--  [REPLACE/DELETE] abbrev. The abbreviated title is required if the full title is longer than 39 characters -->
+
+    <seriesInfo name="Internet-Draft" value="draft-szarecki-teas-bw-aware-bypass-no-reservation"/>
+   
+    <author fullname="Rafal Jan Szarecki" initials="R.J." surname="Szarecki">
+      
+    <!-- all of the following elements are optional -->
+      <organization>Google LLC</organization>
+      <address>
+        <postal>
+          <!-- Reorder these if your country does things differently -->
+          <street>1600 Amphitheatre Parkway</street>
+          <city>Mountain View</city>
+          <region>California</region>
+          <code>94043</code>
+          <country>US</country>
+          <!-- Uses two letter country code -->
+        </postal>        
+        <phone></phone>
+        <email>rszarecki@gmail.com</email>
+      </address>
+    </author>
+    <author fullname="Jon Mitchell" initials="J." surname="Mitchell">
+      <organization>Google LLC</organization>
+      <address>
+        <postal>
+          <!-- Reorder these if your country does things differently -->
+          <street>1600 Amphitheatre Parkway</street>
+          <city>Mountain View</city>
+          <region>California</region>
+          <code>94043</code>
+          <country>US</country>
+          <!-- Uses two letter country code -->
+        </postal>        
+        <phone></phone>
+        <email>jrmitche@puck.nether.net</email>
+      </address>
+    </author>
+
+    <date year="2024"/>
+    <!-- On draft subbmission:
+         * If only the current year is specified, the current day and month will be used.
+         * If the month and year are both specified and are the current ones, the current day will
+           be used
+         * If the year is not the current one, it is necessary to specify at least a month and day="1" will be used.
+    -->
+
+    <area>Routing</area>
+    <workgroup>Traffic Engineering Architecture and Signaling</workgroup>
+    <!-- "Internet Engineering Task Force" is fine for individual submissions.  If this element is 
+          not present, the default is "Network Working Group", which is used by the RFC Editor as 
+          a nod to the history of the RFC Series. -->
+
+    <keyword>MPLS</keyword>
+    <keyword>FRR</keyword>
+    <keyword>bypass</keyword>
+    <keyword>facility backup</keyword>
+    <keyword>local protection</keyword>
+    <keyword>bandwidth reservation</keyword>
+    <keyword>CSPF</keyword>
+    <!-- [REPLACE/DELETE]. Multiple allowed.  Keywords are incorporated into HTML output files for 
+         use by search engines. -->
+
+    <abstract>
+      <t>RFC4090 documents facility backup FRR in MPLS-TE networks.  This document describes methods that allow the Point of Local Repair (PLR) to find a path with sufficient available bandwidth to accommodate protected traffic, while not making undesired reservations that would require additional capacity. Below aspects are covered:</t>
+      <ul spacing="normal">
+        <li>Automatic determination of bypass required bandwidth by the PLR</li>
+        <li>Calculation of path based on this information using constrained shortest path algorithm (CSPF)</li>
+        <li>Determination of RSVP SENDER-TSPEC rate value for bypass tunnel signaling</li>
+      </ul>
+    </abstract>
+ 
+  </front>
+
+  <middle>
+    
+    <section>
+     <name>Introduction</name>
+      <t>Network operators use MPLS-TE technology, as described in <xref target="RFC3209"/>, to optimize network resources (bandwidth over network graph) while providing prioritized treatment - high bandwidth and low loss. This is often done by combination of bandwidth reservation for LSPs and protection (of some more critical) of them by facility backup <xref target="RFC4090"/> technique. The facility backup technique uses a pre-signaled bypass tunnel (instantiated as MPLS LSP) to temporally carry impacted LSP around a faulty resource, such as a link or node, immediately after failure. In many networks, operators have not configured the LSPs to have bandwidth protection desired, and therefore the bypass tunnels are provisioned without any matching bandwidth reservation constraint, to prevent the booking of bandwidth for these tunnels which only carry traffic briefly during failure events until global convergence.  Without a bandwidth reservation constraint that matches the protected LSPs required bandwidth, the bypass tunnels are typically routed on the shortest path between the Point of Local Repair (PLR) and Merge Point (MP) based on a CSPF satisfying any other constraints such as shared risk link groups (SRLG). This practice has the limitation that the bypass tunnel could be routed over interfaces that have available bandwidth much lower than protected resource's reservations. This limitation is specifically common in networks that utilize IGP metric values based on distance or latency rather than bandwidth.  Such networks may have a large difference between the highest and lowest capacity of adjacencies between various locations.</t>
+
+      <t>This document provides procedures that the headend routing node of the bypass tunnel (PLR) can utilize to optimize bypass tunnel path computation, so it is routed over links in a network that are more likely to have sufficient available bandwidth, while still not utilizing bandwidth reservations. Procedures described are local to PLR, hence do not impose any special requirements on other nodes in the network, and could be deployed incrementally.  These procedures could be deployed whether bypass tunnel's Merge Point (MP) is explicitly provisioned via local configuration or when the PLR automatically determines the necessary MP form Traffic Engineering Database (TED) and inspection of RRO of protected LSPs.</t>
+      
+      <section>
+        <name>Requirements Language</name>
+        <t>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL",
+          "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT
+          RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be
+          interpreted as described in BCP 14 <xref target="RFC2119"/>
+          <xref target="RFC8174"/> when, and only when, they appear in
+          all capitals, as shown here.</t>
+      </section>
+      <!-- [CHECK] The 'Requirements Language' section is optional -->
+
+    </section>
+    
+    <section anchor="PBW_determination">
+      <name>Finding of bypass required bandwidth</name>
+        <t>In order for the PLR to perform bypass path computation that has sufficient available bandwidth, the volume of traffic expected to be protected by a given bypass tunnel needs to be determined even if it will not be utilized in RSVP signaling. In this document the terminology protected bandwidth (PBW) refers to this value.</t>
+        <section>
+          <name>Static Protected Bandwidth</name>
+          <t>The PBW for the bypass tunnel can be computed by an offline tool and configured on the PLR either on per bypass tunnel basis, globally or on per protected resource basis.  The accuracy of utilization of this method is limited by the offline modeling and the current network state, so it may not be as reactive as the other approach this document describes. The exact procedure on how the offline tool calculates PBW is out of scope of this document.</t>
+        </section>
+        <section>
+          <name>Dynamically Computed Protected Bandwidth</name>
+          <t>Since the PLR is aware of the bandwidth reservations by the LSPs per protected resource, such as a link or node, the PLR can compute protected bandwidth per bypass tunnel to match the sum of these protected LSPs bandwidth reservations, and can update the required bandwidth utilized for CSPF on a bypass tunnel on regular intervals.  By setting the interval by which the value is reset, referred to as the PBW timer, the operator can balance accuracy versus computational resources and churn included by making this calculation.  To reduce the error rate from a single measurement between intervals, multiple samples of the aggregate value of PBW can be stored and only the largest sample over several sample periods utilized for the next PBW timer induced CSPF.</t>
+          <t>Optionally, a percentage scaled value of the top sample could be applied to optimize the trade off between how much of the sum of protected LSPs bandwidth reservations the PBW should account for.  For instance, a Implementation should allow the application of a scaling factor in the range from 0% to at least 200% of PBW to derive the value, however the default value should be 100%.</t>
+          <t>Implementations may apply some logic to prevent negligible changes requiring churn induced by re-routing of the tunnel by comparing the value to be utilized versus the previous PBW timer initiated value if that value is retained by the implementation.  The periodic computation interval is expected to be shorter or equal to optimization timer LSPs implementing bypass tunnel.</t>
+          <t>This overall approach and implementation of this technology is conceptually very similar to many existing vendor implementations of the "auto-bandwidth" feature, a generalized summary of which is described in <xref target="RFC8733" sectionFormat="of" section="4" />.  Because the number of bypass tunnels in many networks is relatively low compared to protected LSPs, the cost of re-computation and associated churn is likely to be relatively low in comparison to those incurred if the network utilizes auto-bandwidth for their protected LSPs.
+          </t>
+        </section>
+        <section>
+          <name>Hybrid Approach</name>
+          <t>The initial PBW value utilized for a bypass tunnel using this approach even when using the dynamically computed PBW maybe incorrect for a long period of time after initial bypass tunnel creation if the PBW timer period is long as the number of protected LSPs over a newly created bypass tunnel will likely rapidly increase in a number of network events such as when new protected resource, such as a new interface, becomes operational. Initially there will be just very few LSP (or just one) LSP that require protection, hence PBW may be initially very low. Implementations SHOULD allow for configuration of minimum PBW value to be used when a bypass tunnel is initialized and in place of the dynamically calculated PBW if the dynamically calculated PBW is lower than the minimum PBW configured.</t>
+        </section>
+    </section>
+    <section anchor="bypass-path-computation">
+      <name>Bypass path computation</name>
+      <t>The network path for the bypass tunnel is computed using the same logic as described in <xref target="RFC4090" sectionFormat="of" section="6.2"/>. There are four classes of events that trigger the computation of a bypass path:</t>
+      <ol>
+        <li>Expiration of existing bypass lsp reoptimization timer</li>
+        <li>Receipt of PathErr due to network failure along existing bypass path or failure of existing bypass egress interface on PLR</li>
+        <li>Initialization of new bypass tunnel</li>
+        <li>Change of reserved bandwidth of protected LSP or signaling of a new LSP that is to be protected by an existing bypass tunnel</li>
+      </ol>
+      <t>The last event can occur quite frequently, especially in networks that utilize automatic bandwidth determination for protected LSPs with aggressive intervals.  As such, these events SHOULD NOT trigger bypass path re-computation. This is because including these events would lead to never converging network and adversely impact computational resources - control plane CPU of network device.</t>
+      <t>For the events of the first three classes, the PBW value determined as per <xref target="PBW_determination"/> should be used to derive path computation bandwidth constraints utilized by CSPF.  This value together with other constraining attributes configured, (e.g. SRLG) are used as arguments for path computation by CSPF procedure.. The result of this process is an ordered list of network interfaces in the form of Explicit Route Object (ERO) for bypass tunnel, that is used for signaling of LSP instantiating bypass tunnel.</t>
+    </section>
+    <section anchor="bypass-tunnel-signaling">
+      <name>Bypass tunnel signaling</name>
+      <t>Bypass tunnels are instantiated as an LSP that have head-end on PLR and tail-end on MP. They are signaled by RSVP just like any other MPLS LSP. Specifically PLR uses and inserts ERO objects into PATH messages to enforce network path given bypass traverses. The other important RSVP PATH's object is Traffic-Specification (T-SPEC), which encodes bandwidth that needs to be reserved for signaled LSP.</t>
+      <t>Under this procedure, T-SPEC bandwidth is independent of the bandwidth utilized by the CSPF algorithm as described in <xref target="PBW_determination"/>.  Since the purpose of the procedures in this document are to provide a less likely to be congested path for the backup tunnel, the LSP bandwidth for the bypass tunnels should be configured to a value smaller than the value of PBW (Section 2) and value utilized for CSPF (Section 3) procedures, otherwise reservations are more likely to fail due to lack of available bandwidth on the computed path.  Implementation SHOULD support static configuration of signaled bandwidth independent from the PBW, including signaled bandwidth of zero bps value.</t>
+      <t>PLR MUST insert The ERO object in RSVP PATH. Its value MUST be the ERO computed as per <xref target="bypass-path-computation"/>.</t>
+      <t>Note: If ERO returned by path computation described in <xref target="bypass-path-computation"/> is equal to network path bypass tunnel currently traverses, and the signaled bandwidth did not changed (e.g. because it has a statically configured value), there is no need for signaling a new LSP - existing one can be refreshed and utilized.</t>
+    </section>
+
+    <section anchor="IANA">
+    <!-- All drafts are required to have an IANA considerations section. See RFC 8126 for a guide.-->
+      <name>IANA Considerations</name>
+      <t>This memo includes no request to IANA.</t>
+    </section>
+    
+    <section anchor="Security">
+      <!-- All drafts are required to have a security considerations section. See RFC 3552 for a guide. -->
+      <name>Security Considerations</name>
+      <t> This document does not introduce new security issues.  The security considerations listed in <xref target="RFC4090" sectionFormat="of" section="9"/> still remain relevant.
+</t>
+    </section>
+    
+    <!-- NOTE: The Acknowledgements and Contributors sections are at the end of this template -->
+  </middle>
+
+  <back>
+    <references>
+      <name>References</name>
+      <references>
+        <name>Normative References</name>
+        <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.3209.xml"/>
+        <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.4090.xml"/>
+        <!-- The recommended and simplest way to include a well known reference -->
+        
+      </references>
+ 
+      <references>
+        <name>Informative References</name>
+       
+        <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.2119.xml"/>
+        <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.8174.xml"/>
+        <xi:include href="https://bib.ietf.org/public/rfc/bibxml/reference.RFC.8733.xml"/>           
+       
+      </references>
+    </references>
+
+    <section anchor="Acknowledgements" numbered="false">
+      <name>Acknowledgements</name>
+      <t>TBD</t>
+    </section>
+    
+    <section anchor="Contributors" numbered="false">
+      <!-- [REPLACE/DELETE] a Contributors section is optional -->
+      <name>Contributors</name>
+      <t>TBD</t>
+    </section>
+    
+ </back>
+</rfc>
